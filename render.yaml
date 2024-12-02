@@ -1,0 +1,19 @@
+services:
+  - name: python-asyncio-bot
+    type: web
+    env: python
+    plan: free
+    region: oregon 
+    buildCommand: |
+      pip install -r requirements.txt
+    startCommand: |
+      python bot.py
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+    autoDeploy: true
+    healthCheckPath: /
+    disk:
+      name: bot-disk
+      mountPath: /var/data
+      sizeGB: 1 
