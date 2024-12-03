@@ -1,6 +1,6 @@
 import logging
 import asyncio
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher,types
 from handlers import register_handlers
 from flask import Flask, request
 
@@ -13,6 +13,17 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 app = Flask(__name__)
+
+@app.route(f"/{API_TOKEN}", methods=["POST"])
+async def handle_webhook():
+    update = types.Update(**request.get_json())
+    await dp.feed_update(bot, update)
+    return "OK", 200
+
+@app.route("/")
+def home():
+    return "El bot está activo y escuchando webhooks", 200
+
 
 async def on_startup():
     # Configurar comandos y webhook al iniciar
