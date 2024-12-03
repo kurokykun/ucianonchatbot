@@ -27,7 +27,7 @@ async def start_command(message: types.Message):
         "1️⃣ Chicos\n"
         "2️⃣ Chicas\n",
         reply_markup=ReplyKeyboardMarkup(keyboard=[
-            [KeyboardButton(text="Chicos"), KeyboardButton(text="Chicas"), KeyboardButton(text="Sin preferencia")],
+            [KeyboardButton(text="Chicos"), KeyboardButton(text="Chicas")],
         ], resize_keyboard=True),
     )
 
@@ -66,7 +66,7 @@ async def start_command(message: types.Message,state: FSMContext):
     )
 
 # Configurar preferencia del usuario y registrar estado
-@router.message(F.text.in_({"Chicos", "Chicas", "Sin preferencia"}))
+@router.message(F.text.in_({"Chicos", "Chicas"}))
 async def set_preference(message: types.Message, state: FSMContext):
     """Configura la preferencia del usuario y añade a la cola."""  
     user_id = message.from_user.id
