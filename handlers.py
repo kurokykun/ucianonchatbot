@@ -209,14 +209,124 @@ async def cancel_queue(message: types.Message, state: FSMContext):
 # Handler para enviar mensajes dentro de la conversación
 @router.message()
 async def relay_message(message: types.Message):
-    """Reenvía los mensajes al compañero de conversación."""  
+    """Reenvía los mensajes al compañero de conversación, incluyendo multimedia."""
+
     user_id = message.from_user.id
     partner_id = matchmaker.get_partner(user_id)
-    if partner_id:
-        await message.bot.send_message(partner_id, message.text)
-    else:
-        await message.answer("No estás en una conversación activa. Usa /start para comenzar de nuevo.")
 
+    if partner_id:
+        # Si el mensaje es una respuesta a otro, el bot también responderá al mensaje original
+        if message.reply_to_message:
+            # Verificar si el mensaje al que se está respondiendo es de nuestro compañero
+            if message.reply_to_message.from_user.id == partner_id:
+                # El mensaje al que se está respondiendo es del compañero
+                if message.text:
+                    await message.bot.send_message(
+                        partner_id, 
+                        message.text, 
+                        reply_to_message_id=message.reply_to_message.message_id
+                    )
+                elif message.photo:
+                    await message.bot.send_photo(
+                        partner_id, 
+                        message.photo[-1].file_id,  # Selecciona la mejor calidad de la foto
+                        caption=message.caption,  # Si tiene un pie de foto
+                        reply_to_message_id=message.reply_to_message.message_id
+                    )
+                elif message.video:
+                    await message.bot.send_video(
+                        partner_id, 
+                        message.video.file_id,
+                        caption=message.caption,  # Si tiene un pie de foto
+                        reply_to_message_id=message.reply_to_message.message_id
+                    )
+                elif message.audio:
+                    await message.bot.send_audio(
+                        partner_id, 
+                        message.audio.file_id,
+                        caption=message.caption,  # Si tiene un pie de foto
+                        reply_to_message_id=message.reply_to_message.message_id
+                    )
+                elif message.document:
+                    await message.bot.send_document(
+                        partner_id, 
+                        message.document.file_id,
+                        caption=message.caption,  # Si tiene un pie de foto
+                        reply_to_message_id=message.reply_to_message.message_id
+                    )
+                else:
+                    # Si es otro tipo de contenido multimedia no manejado, enviar un mensaje
+                    await message.bot.send_message(
+                        partner_id, 
+                        "Mensaje con formato no soportado.", 
+                        reply_to_message_id=message.reply_to_message.message_id
+                    )
+            else:
+                # El mensaje al que se está respondiendo no es del compañero (puede ser del bot)
+                # Enviar el mensaje sin "reply_to_message_id"
+                if message.text:
+                    await message.bot.send_message(partner_id, message.text)
+                elif message.photo:
+                    await message.bot.send_photo(
+                        partner_id, 
+                        message.photo[-1].file_id,  # Selecciona la mejor calidad de la foto
+                        caption=message.caption
+                    )
+                elif message.video:
+                    await message.bot.send_video(
+                        partner_id, 
+                        message.video.file_id,
+                        caption=message.caption
+                    )
+                elif message.audio:
+                    await message.bot.send_audio(
+                        partner_id, 
+                        message.audio.file_id,
+                        caption=message.caption
+                    )
+                elif message.document:
+                    await message.bot.send_document(
+                        partner_id, 
+                        message.document.file_id,
+                        caption=message.caption
+                    )
+                else:
+                    # Si es otro tipo de contenido multimedia no manejado, enviar un mensaje
+                    await message.bot.send_message(partner_id, "Mensaje con formato no soportado.")
+        else:
+            # Si no es una respuesta directa, simplemente reenvía el mensaje
+            if message.text:
+                await message.bot.send_message(partner_id, message.text)
+            elif message.photo:
+                await message.bot.send_photo(
+                    partner_id, 
+                    message.photo[-1].file_id,  # Selecciona la mejor calidad de la foto
+                    caption=message.caption
+                )
+            elif message.video:
+                await message.bot.send_video(
+                    partner_id, 
+                    message.video.file_id,
+                    caption=message.caption
+                )
+            elif message.audio:
+                await message.bot.send_audio(
+                    partner_id, 
+                    message.audio.file_id,
+                    caption=message.caption
+                )
+            elif message.document:
+                await message.bot.send_document(
+                    partner_id, 
+                    message.document.file_id,
+                    caption=message.caption
+                )
+            else:
+                # Si es otro tipo de contenido multimedia no manejado, enviar un mensaje
+                await message.bot.send_message(partner_id, "Mensaje con formato no soportado.")
+    else:
+        # Si no hay compañero en la conversación, notifica al usuario
+        await message.answer("No estás en una conversación activa. Usa /start para comenzar de nuevo.")
 
 # Registrar los handlers
 def register_handlers(dp: Dispatcher):

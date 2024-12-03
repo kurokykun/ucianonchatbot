@@ -5,7 +5,7 @@ from handlers import register_handlers
 from os import getenv
 
 # Configuración básica
-API_TOKEN = getenv('BOT_TOKEN')
+API_TOKEN = '7930561136:AAFGTAoKhkkGOf0e_NY4cZkdQcOm7IsEIZ0'
 
 logging.basicConfig(level=logging.INFO)
 
