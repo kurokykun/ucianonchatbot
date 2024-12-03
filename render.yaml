@@ -1,6 +1,6 @@
 services:
   - name: python-asyncio-bot
-    type: worker
+    type: web
     env: python
     plan: free
     region: oregon 
