@@ -2,6 +2,8 @@ import logging
 import asyncio
 from aiogram import Bot, Dispatcher
 from handlers import register_handlers
+from flask import Flask, request
+
 import os
 
 # Configuración básica
@@ -10,11 +12,12 @@ API_TOKEN = os.getenv('BOT_TOKEN')
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
-
+app = Flask(__name__)
 
 async def on_startup():
     # Configurar comandos y webhook al iniciar
     RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
+    register_handlers(dp)
     if not RENDER_EXTERNAL_URL:
         raise ValueError("RENDER_EXTERNAL_URL no está definido en las variables de entorno.")
     webhook_url = f"{RENDER_EXTERNAL_URL}/{API_TOKEN}"
