@@ -14,8 +14,33 @@ class MatchMaker:
         # Validar que el género preferido sea válido
         if preferred_gender not in self.queue:
             raise ValueError("Género preferido inválido, debe ser 'chicos' o 'chicas'")
+        
+        # Determinar el género opuesto
+        opposite_gender = "chicas" if preferred_gender == "chicos" else "chicos"
 
-        # Verificar si hay algún usuario disponible en la cola preferida
+        # Primero intentar emparejar con alguien del género opuesto
+        if self.queue[opposite_gender]:
+            # Buscar al primer usuario disponible en la cola del género opuesto
+            partner_id = self.queue[opposite_gender].pop(0)
+            
+            # Verificar que no se empareje con el mismo usuario
+            if partner_id == user_id:
+                # Si el partner es el mismo usuario, no lo emparejamos y volvemos a la cola
+                self.queue[opposite_gender].insert(0, partner_id)  # Regresamos a la cola
+                return None
+            
+            # Eliminar al usuario de la cola correspondiente (si está presente)
+            if user_id in self.queue["chicos"]:
+                self.queue["chicos"].remove(user_id)
+            elif user_id in self.queue["chicas"]:
+                self.queue["chicas"].remove(user_id)
+
+            # Iniciar la conversación
+            self.start_conversation(user_id, partner_id)
+            
+            return partner_id
+
+         # Si no hay nadie del género opuesto, proceder con el emparejamiento dentro del mismo género
         if self.queue[preferred_gender]:
             # Buscar al primer usuario disponible en la cola
             partner_id = self.queue[preferred_gender].pop(0)
