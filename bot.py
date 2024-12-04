@@ -1,55 +1,39 @@
 import logging
 import asyncio
-from aiogram import Bot, Dispatcher,types
+from aiogram import Bot, Dispatcher
 from handlers import register_handlers
-from flask import Flask, request
+from flask import Flask
+from os import getenv
+import threading
 
-import os
-
-# Configuración básica
-API_TOKEN = os.getenv('BOT_TOKEN')
+API_TOKEN = getenv('BOT_TOKEN')
+PORT = int(getenv('PORT', 5000))
 
 logging.basicConfig(level=logging.INFO)
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher()
 app = Flask(__name__)
-
-@app.route(f"/{API_TOKEN}", methods=["POST"])
-async def handle_webhook():
-    update = types.Update(**request.get_json())
-    await dp.feed_update(bot, update)
-    return "OK", 200
 
 @app.route("/")
 def home():
-    return "El bot está activo y escuchando webhooks", 200
+    return "El bot está corriendo", 200
 
+def run_flask():
+    app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
 
-async def on_startup():
-    # Configurar comandos y webhook al iniciar
-    RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
+async def start_bot():
+    bot = Bot(token=API_TOKEN)
+    dp = Dispatcher()
+    
     register_handlers(dp)
-    if not RENDER_EXTERNAL_URL:
-        raise ValueError("RENDER_EXTERNAL_URL no está definido en las variables de entorno.")
-    webhook_url = f"{RENDER_EXTERNAL_URL}/{API_TOKEN}"
-    await bot.set_webhook(webhook_url)
-    print(f"Webhook configurado en: {webhook_url}")
 
-async def on_shutdown():
-    # Eliminar el webhook al apagar
-    await bot.delete_webhook()
-    await bot.session.close()
+    await dp.start_polling(bot)
+
+
+def main():
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+
+    asyncio.run(start_bot())
 
 if __name__ == "__main__":
-    # Configurar el servidor Flask y ejecutar Aiogram en paralelo
-    PORT = int(os.environ.get("PORT", 5000))
-
-    # Crear un bucle de eventos de asyncio para ejecutar Flask y tareas de Aiogram
-    loop = asyncio.get_event_loop()
-
-    # Agregar tareas para on_startup y on_shutdown
-    loop.run_until_complete(on_startup())
-    try:
-        app.run(host="0.0.0.0", port=PORT, threaded=False)  # Flask debe ejecutarse en el hilo principal
-    except KeyboardInterrupt:
-        loop.run_until_complete(on_shutdown())
+    main()
