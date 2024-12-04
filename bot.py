@@ -6,7 +6,7 @@ from flask import Flask
 from os import getenv
 import threading
 
-API_TOKEN = getenv('BOT_TOKEN')
+API_TOKEN = str(getenv('BOT_TOKEN'))
 PORT = int(getenv('PORT', 5000))
 
 logging.basicConfig(level=logging.INFO)
